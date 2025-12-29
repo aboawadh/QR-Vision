@@ -68,12 +68,9 @@ export default function QRScanner() {
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               مسح رمز QR
             </h3>
-            <p className="text-gray-600 mb-6">
-              استخدم الكاميرا لمسح رموز QR واستخراج المعلومات
-            </p>
             <button
               onClick={() => setIsScanning(true)}
-              className="btn-primary"
+              className="btn-primary mt-6"
             >
               بدء المسح
             </button>

@@ -90,9 +90,6 @@ function App() {
         className="text-center mt-16 text-gray-500 text-sm"
       >
         <p>
-          صُنع بـ ❤️ باستخدام React و TypeScript
-        </p>
-        <p className="mt-2">
           © {new Date().getFullYear()} QR Vision - جميع الحقوق محفوظة
         </p>
       </motion.footer>
