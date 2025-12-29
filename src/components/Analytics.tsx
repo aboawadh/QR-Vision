@@ -95,33 +95,6 @@ export default function Analytics() {
     
     localStorage.setItem('qr-vision-daily-stats', JSON.stringify(dailyStats));
   };
-    localStorage.setItem('qr-vision-analytics', JSON.stringify(updatedData));
-
-    // Listen for custom events
-    const handleQRGenerated = () => {
-      setAnalytics(prev => {
-        const updated = { ...prev, qrCodesGenerated: prev.qrCodesGenerated + 1 };
-        localStorage.setItem('qr-vision-analytics', JSON.stringify(updated));
-        return updated;
-      });
-    };
-
-    const handleQRScanned = () => {
-      setAnalytics(prev => {
-        const updated = { ...prev, qrCodesScanned: prev.qrCodesScanned + 1 };
-        localStorage.setItem('qr-vision-analytics', JSON.stringify(updated));
-        return updated;
-      });
-    };
-
-    window.addEventListener('qr-generated', handleQRGenerated);
-    window.addEventListener('qr-scanned', handleQRScanned);
-
-    return () => {
-      window.removeEventListener('qr-generated', handleQRGenerated);
-      window.removeEventListener('qr-scanned', handleQRScanned);
-    };
-  }, []);
 
   const stats = [
     {
