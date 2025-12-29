@@ -7,6 +7,7 @@ import {
   CheckIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
+import QRTemplates from './QRTemplates';
 
 export default function QRGenerator() {
   const [text, setText] = useState('');
@@ -16,7 +17,19 @@ export default function QRGenerator() {
   const [errorLevel, setErrorLevel] = useState<'L' | 'M' | 'Q' | 'H'>('M');
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [logo, setLogo] = useState<string | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogo(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const downloadQR = () => {
     if (!qrRef.current) return;
@@ -34,6 +47,26 @@ export default function QRGenerator() {
 
     img.onload = () => {
       ctx?.drawImage(img, 0, 0);
+      
+      // Add logo if exists
+      if (logo && ctx) {
+        const logoImg = new Image();
+        logoImg.onload = () => {
+          const logoSize = size * 0.2;
+          const x = (size - logoSize) / 2;
+          const y = (size - logoSize) / 2;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+          ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+          downloadCanvas();
+        };
+        logoImg.src = logo;
+      } else {
+        downloadCanvas();
+      }
+    };
+
+    const downloadCanvas = () => {
       const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
       downloadLink.download = 'qr-code.png';
@@ -44,14 +77,36 @@ export default function QRGenerator() {
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
 
+  const downloadSVG = () => {
+    if (!qrRef.current) return;
+    const svg = qrRef.current.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'qr-code.svg';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleTemplateGenerate = (templateText: string) => {
+    setText(templateText);
+    window.dispatchEvent(new Event('qr-generated'));
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      <QRTemplates onGenerate={handleTemplateGenerate} />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -154,6 +209,34 @@ export default function QRGenerator() {
                 <option value="H">عالي جداً (30%)</option>
               </select>
             </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-gray-700 text-sm font-semibold mb-2">
+                إضافة شعار/لوقو في المنتصف
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                {logo && (
+                  <button
+                    onClick={() => setLogo(null)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                  >
+                    إزالة
+                  </button>
+                )}
+              </div>
+              {logo && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={logo} alt="Logo" className="w-12 h-12 object-contain border rounded" />
+                  <span className="text-xs text-gray-500">سيتم عرض اللوقو في منتصف الرمز</span>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -165,7 +248,7 @@ export default function QRGenerator() {
           >
             <div 
               ref={qrRef}
-              className="bg-white p-6 rounded-2xl shadow-lg"
+              className="bg-white p-6 rounded-2xl shadow-lg relative"
             >
               <QRCodeSVG
                 value={text}
@@ -175,6 +258,14 @@ export default function QRGenerator() {
                 level={errorLevel}
                 includeMargin={true}
               />
+              {logo && (
+                <div 
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-2 rounded"
+                  style={{ width: size * 0.2, height: size * 0.2 }}
+                >
+                  <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center">
@@ -183,7 +274,15 @@ export default function QRGenerator() {
                 className="btn-primary flex items-center gap-2"
               >
                 <ArrowDownTrayIcon className="w-5 h-5" />
-                تحميل
+                تحميل PNG
+              </button>
+              
+              <button
+                onClick={downloadSVG}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+                تحميل SVG
               </button>
               
               <button
