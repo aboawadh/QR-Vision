@@ -40,6 +40,63 @@ export default function Analytics() {
     setAnalytics(updatedData);
     localStorage.setItem('qr-vision-analytics', JSON.stringify(updatedData));
 
+    // Update daily stats
+    updateDailyStats('visits');
+
+    // Listen for custom events
+    const handleQRGenerated = () => {
+      setAnalytics(prev => {
+        const updated = { ...prev, qrCodesGenerated: prev.qrCodesGenerated + 1 };
+        localStorage.setItem('qr-vision-analytics', JSON.stringify(updated));
+        updateDailyStats('qrGenerated');
+        return updated;
+      });
+    };
+
+    const handleQRScanned = () => {
+      setAnalytics(prev => {
+        const updated = { ...prev, qrCodesScanned: prev.qrCodesScanned + 1 };
+        localStorage.setItem('qr-vision-analytics', JSON.stringify(updated));
+        updateDailyStats('qrScanned');
+        return updated;
+      });
+    };
+
+    window.addEventListener('qr-generated', handleQRGenerated);
+    window.addEventListener('qr-scanned', handleQRScanned);
+
+    return () => {
+      window.removeEventListener('qr-generated', handleQRGenerated);
+      window.removeEventListener('qr-scanned', handleQRScanned);
+    };
+  }, []);
+
+  const updateDailyStats = (type: 'visits' | 'qrGenerated' | 'qrScanned') => {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyStats = JSON.parse(localStorage.getItem('qr-vision-daily-stats') || '[]');
+    
+    const todayIndex = dailyStats.findIndex((stat: any) => stat.date === today);
+    
+    if (todayIndex >= 0) {
+      dailyStats[todayIndex][type] = (dailyStats[todayIndex][type] || 0) + 1;
+    } else {
+      dailyStats.push({
+        date: today,
+        visits: type === 'visits' ? 1 : 0,
+        qrGenerated: type === 'qrGenerated' ? 1 : 0,
+        qrScanned: type === 'qrScanned' ? 1 : 0,
+      });
+    }
+    
+    // Keep only last 30 days
+    if (dailyStats.length > 30) {
+      dailyStats.shift();
+    }
+    
+    localStorage.setItem('qr-vision-daily-stats', JSON.stringify(dailyStats));
+  };
+    localStorage.setItem('qr-vision-analytics', JSON.stringify(updatedData));
+
     // Listen for custom events
     const handleQRGenerated = () => {
       setAnalytics(prev => {

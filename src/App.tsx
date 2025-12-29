@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import QRGenerator from './components/QRGenerator';
 import QRScanner from './components/QRScanner';
 import Analytics from './components/Analytics';
+import AdminDashboard from './components/AdminDashboard';
 import { 
   QrCodeIcon, 
   CameraIcon, 
   ChartBarIcon,
-  SparklesIcon
+  SparklesIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 
-type TabType = 'generate' | 'scan' | 'analytics';
+type TabType = 'generate' | 'scan' | 'analytics' | 'admin';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('generate');
@@ -19,6 +21,7 @@ function App() {
     { id: 'generate' as TabType, label: 'توليد', icon: QrCodeIcon },
     { id: 'scan' as TabType, label: 'مسح', icon: CameraIcon },
     { id: 'analytics' as TabType, label: 'إحصائيات', icon: ChartBarIcon },
+    { id: 'admin' as TabType, label: 'لوحة التحكم', icon: ShieldCheckIcon },
   ];
 
   return (
@@ -79,6 +82,7 @@ function App() {
           {activeTab === 'generate' && <QRGenerator />}
           {activeTab === 'scan' && <QRScanner />}
           {activeTab === 'analytics' && <Analytics />}
+          {activeTab === 'admin' && <AdminDashboard />}
         </motion.div>
       </AnimatePresence>
 
